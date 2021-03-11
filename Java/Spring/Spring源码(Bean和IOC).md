@@ -151,7 +151,7 @@
 
 当Spring启动项目创建好后, 便可以从`main()`方法中的`AnnotationConfigApplicationContext ctx = new AnnotationConfigApplicationContext(MainConfig.class)` 进入代码.
 
-### 加载Spring启动时所必须的beanDefinition
+### 加载Spring启动时所必须的Spring内部beanDefinition
 
 1. 首先代码进入到`AnnotationConfigApplicationContext`的构造方法中
 
@@ -282,7 +282,7 @@
 
       当该方法执行完后, 能够在调试界面发现如下图, 在`beanDefinitionMap`中添加了上述代码执行注册的`BeanDefinition`
 
-      ![image-20210311162701315](/home/hpc/GitCode/JavaKnowledge/Java/Spring/Spring源码(Bean和IOC).assets/image-20210311162701315.png)
+      ![image-20210311162701315](.\Spring源码(Bean和IOC).assets\image-20210311162701315.png)
 
 4. 然后继续执行代码, 知道回到第2步的重载构造方法中, 然后看到`this.scanner = new ClassPathBeanDefinitionScanner(this);`, 根据代码的类名可以大体看成该类的作用是在ClassPath路径下进行BeanDefinitioin的扫描. 执行该行代码, 进入到`ClassPathBeanDefinitionScanner`类的构造方法中
 
@@ -367,3 +367,176 @@
       ```
 
       该方法注释上描述是通过设置ResourceLoader, 以便于后面解析资源(这里面我看得不太清楚)
+
+### 加载更多的Component类(自定义)
+
+此步与上述步骤不同的是， 上述步骤是加载Spring内部的BeanDefinition，而此步是加载用户自定义的带有Component元注解的类。
+
+回到`AnnotationConfigApplicationContext`类的构造方法：
+
+```java
+public AnnotationConfigApplicationContext(Class<?>... componentClasses) {
+    this();
+    register(componentClasses);
+    refresh();
+}
+```
+
+1. 接着前面的步骤，继续运行`register(componentClasses);`方法， 其中`componentClasses`是自定义的`mainConfig`类
+
+   ```java
+   public void register(Class<?>... componentClasses) {
+       Assert.notEmpty(componentClasses, "At least one component class must be specified");
+       StartupStep registerComponentClass = this.getApplicationStartup().start("spring.context.component-classes.register")
+           .tag("classes", () -> Arrays.toString(componentClasses));
+       this.reader.register(componentClasses);
+       registerComponentClass.end();
+   }
+   ```
+
+   其中重要的核心的代码是：`this.reader.register(componentClasses)`
+
+2. 接下来运行上述代码中的核心代码`this.reader.register(componentClasses)`, 方法体如下
+
+   ```java
+   public void register(Class<?>... componentClasses) {
+       for (Class<?> componentClass : componentClasses) {
+           registerBean(componentClass);
+       }
+   }
+   ```
+
+3. 然后进入到` registerBean(componentClass)` 方法体中
+
+   ```java
+   public void registerBean(Class<?> beanClass) {
+       doRegisterBean(beanClass, null, null, null, null);
+   }
+   ```
+
+4. 接下来进入`doRegisterBean(beanClass, null, null, null, null)`方法中
+
+   ```java
+   private <T> void doRegisterBean(Class<T> beanClass, @Nullable String name,
+                                   @Nullable Class<? extends Annotation>[] qualifiers, @Nullable Supplier<T> supplier,
+                                   @Nullable BeanDefinitionCustomizer[] customizers) {
+   
+       AnnotatedGenericBeanDefinition abd = new AnnotatedGenericBeanDefinition(beanClass);
+       if (this.conditionEvaluator.shouldSkip(abd.getMetadata())) {
+           return;
+       }
+   
+       abd.setInstanceSupplier(supplier);
+       ScopeMetadata scopeMetadata = this.scopeMetadataResolver.resolveScopeMetadata(abd);
+       abd.setScope(scopeMetadata.getScopeName());
+       String beanName = (name != null ? name : this.beanNameGenerator.generateBeanName(abd, this.registry));
+   
+       AnnotationConfigUtils.processCommonDefinitionAnnotations(abd);
+       if (qualifiers != null) {
+           for (Class<? extends Annotation> qualifier : qualifiers) {
+               if (Primary.class == qualifier) {
+                   abd.setPrimary(true);
+               }
+               else if (Lazy.class == qualifier) {
+                   abd.setLazyInit(true);
+               }
+               else {
+                   abd.addQualifier(new AutowireCandidateQualifier(qualifier));
+               }
+           }
+       }
+       if (customizers != null) {
+           for (BeanDefinitionCustomizer customizer : customizers) {
+               customizer.customize(abd);
+           }
+       }
+   
+       BeanDefinitionHolder definitionHolder = new BeanDefinitionHolder(abd, beanName);
+       definitionHolder = AnnotationConfigUtils.applyScopedProxyMode(scopeMetadata, definitionHolder, this.registry);
+       BeanDefinitionReaderUtils.registerBeanDefinition(definitionHolder, this.registry);
+   }
+   ```
+
+   - 首先上述代码中`AnnotatedGenericBeanDefinition abd = new AnnotatedGenericBeanDefinition(beanClass)`的构造方法如下：
+
+       ```java
+       public AnnotatedGenericBeanDefinition(Class<?> beanClass) {
+           setBeanClass(beanClass);
+           this.metadata = AnnotationMetadata.introspect(beanClass);
+       }
+       ```
+       
+       其中`AnnotationMetadata.introspect(beanClass)`获取了`mainConfig`类上的所有注解。
+       
+   - 上述代码中的`AnnotationConfigUtils.processCommonDefinitionAnnotations(abd)`的方法体如下：
+
+       ```java
+       public static void processCommonDefinitionAnnotations(AnnotatedBeanDefinition abd) {
+           processCommonDefinitionAnnotations(abd, abd.getMetadata());
+       }
+       ```
+
+       继续进入`processCommonDefinitionAnnotations(abd, abd.getMetadata())`方法体中
+
+       ```java
+       static void processCommonDefinitionAnnotations(AnnotatedBeanDefinition abd, AnnotatedTypeMetadata metadata) {
+           AnnotationAttributes lazy = attributesFor(metadata, Lazy.class);
+           if (lazy != null) {
+               abd.setLazyInit(lazy.getBoolean("value"));
+           }
+           else if (abd.getMetadata() != metadata) {
+               lazy = attributesFor(abd.getMetadata(), Lazy.class);
+               if (lazy != null) {
+                   abd.setLazyInit(lazy.getBoolean("value"));
+               }
+           }
+       
+           if (metadata.isAnnotated(Primary.class.getName())) {
+               abd.setPrimary(true);
+           }
+           AnnotationAttributes dependsOn = attributesFor(metadata, DependsOn.class);
+           if (dependsOn != null) {
+               abd.setDependsOn(dependsOn.getStringArray("value"));
+           }
+       
+           AnnotationAttributes role = attributesFor(metadata, Role.class);
+           if (role != null) {
+               abd.setRole(role.getNumber("value").intValue());
+           }
+           AnnotationAttributes description = attributesFor(metadata, Description.class);
+           if (description != null) {
+               abd.setDescription(description.getString("value"));
+           }
+       }
+       ```
+
+       该方法是用来通过`mainConfig`类上的注解完善`mainConfig`的`AnnotatedBeanDefinition`类。其中`AnnotatedBeanDefinition`是`BeanDefinition`的扩展类，其中包含了注解等其它相关设置。
+
+   - 最后在`doRegisterBean()`方法的最后`BeanDefinitionReaderUtils.registerBeanDefinition(definitionHolder, this.registry)`, 注册了`mainConfig`类的`BeanDefinition`, 方法体如下：
+
+       ```java
+       public static void registerBeanDefinition(
+       			BeanDefinitionHolder definitionHolder, BeanDefinitionRegistry registry)
+       			throws BeanDefinitionStoreException {
+       
+           // Register bean definition under primary name.
+           String beanName = definitionHolder.getBeanName();
+           registry.registerBeanDefinition(beanName, definitionHolder.getBeanDefinition());
+       
+           // Register aliases for bean name, if any.
+           String[] aliases = definitionHolder.getAliases();
+           if (aliases != null) {
+               for (String alias : aliases) {
+                   registry.registerAlias(beanName, alias);
+               }
+           }
+       }
+       ```
+
+       在这个方法中关于`BeanDefinition`注册了多次, 其中首先通过Bean名注册一次， 然后又通过别名进行注册。
+   
+5. 通过`AnnotationConfigApplicationContext`类中构造方法执行``register(componentClasses)` 执行结束，可以发现idea中调试窗口中关于`BeanDefinition`注册如下：
+
+   ![image-20210311225537706](Spring源码(Bean和IOC).assets/image-20210311225537706.png)
+
+   
