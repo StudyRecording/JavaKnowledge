@@ -282,7 +282,7 @@
 
       当该方法执行完后, 能够在调试界面发现如下图, 在`beanDefinitionMap`中添加了上述代码执行注册的`BeanDefinition`
 
-      ![image-20210311162701315](.\Spring源码(Bean和IOC).assets\image-20210311162701315.png)
+      ![image-20210311162701315](Spring源码(Bean和IOC).assets/image-20210311162701315.png)
 
 4. 然后继续执行代码, 知道回到第2步的重载构造方法中, 然后看到`this.scanner = new ClassPathBeanDefinitionScanner(this);`, 根据代码的类名可以大体看成该类的作用是在ClassPath路径下进行BeanDefinitioin的扫描. 执行该行代码, 进入到`ClassPathBeanDefinitionScanner`类的构造方法中
 

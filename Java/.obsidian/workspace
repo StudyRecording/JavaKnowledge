@@ -4,12 +4,15 @@
     "type": "split",
     "children": [
       {
-        "id": "4ab2445fe52240ac",
+        "id": "9652ddd9d70ff7c9",
         "type": "leaf",
         "active": true,
         "state": {
-          "type": "graph",
-          "state": {}
+          "type": "markdown",
+          "state": {
+            "file": "Spring/Spring源码(Bean和IOC).md",
+            "mode": "preview"
+          }
         }
       }
     ],
@@ -66,6 +69,7 @@
             "state": {
               "type": "backlink",
               "state": {
+                "file": "Spring/Spring源码(Bean和IOC).md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -83,6 +87,7 @@
   },
   "lastOpenFiles": [
     "Spring/Spring源码(Bean和IOC).md",
+    "image-20210311162701315.png",
     "home/hpc/GitCode/JavaKnowledge/Java/Spring/Spring源码(Bean和IOC).assets/image-20210311162701315.png.md",
     "Spring/Untitled.md"
   ]
