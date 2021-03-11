@@ -1,0 +1,89 @@
+{
+  "main": {
+    "id": "0cebd6b382177f1b",
+    "type": "split",
+    "children": [
+      {
+        "id": "4ab2445fe52240ac",
+        "type": "leaf",
+        "active": true,
+        "state": {
+          "type": "graph",
+          "state": {}
+        }
+      }
+    ],
+    "direction": "vertical"
+  },
+  "left": {
+    "id": "856ed20d237fb1c9",
+    "type": "split",
+    "children": [
+      {
+        "id": "205df425d3deef63",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "eb4d07210a48466e",
+            "type": "leaf",
+            "state": {
+              "type": "file-explorer",
+              "state": {}
+            }
+          },
+          {
+            "id": "db855149eafa5f64",
+            "type": "leaf",
+            "state": {
+              "type": "search",
+              "state": {
+                "query": "",
+                "matchingCase": false,
+                "explainSearch": false,
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical"
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300
+  },
+  "right": {
+    "id": "89f8e596d561e95e",
+    "type": "split",
+    "children": [
+      {
+        "id": "6f4c6a1d5cb5b073",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "12e3b02f9c1d7edf",
+            "type": "leaf",
+            "state": {
+              "type": "backlink",
+              "state": {
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical",
+                "backlinkCollapsed": true,
+                "unlinkedCollapsed": true
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300,
+    "collapsed": true
+  },
+  "lastOpenFiles": [
+    "Spring/Spring源码(Bean和IOC).md",
+    "home/hpc/GitCode/JavaKnowledge/Java/Spring/Spring源码(Bean和IOC).assets/image-20210311162701315.png.md",
+    "Spring/Untitled.md"
+  ]
+}
